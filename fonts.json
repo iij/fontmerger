@@ -1,0 +1,66 @@
+[{
+  "id": "seti-ui",
+  "name": "Seti UI",
+  "description": "a set of icons for Seti UI. https://atom.io/themes/seti-ui",
+  "filename": "./fonts/seti-ui/seti-ui.otf",
+  "unicode_range": ["E4FA", "E52B"],
+  "remap_start_point": "E5FA",
+  "scale": 0.9
+}, {
+  "id": "devicon",
+  "name": "Devicon",
+  "description": "a set of icons representing programming languages, designing & development tools. http://devicon.fr/",
+  "filename": "./fonts/devicon/devicons.ttf",
+  "unicode_range": ["E600", "E6C5"],
+  "remap_start_point": "E700",
+  "scale": 0.9
+}, {
+  "id": "powerline-extra",
+  "name": "Powerline Extra Symbols",
+  "description": "Extra glyphs for the powerline separators. https://github.com/ryanoasis/powerline-extra-symbols",
+  "filename": "./fonts/powerline-extra/PowerlineExtraSymbols.otf",
+  "unicode_range": ["E0A0", "E0D4"]
+}, {
+  "id": "powerline",
+  "name": "Powerline Symbols",
+  "description": "https://github.com/powerline/powerline",
+  "filename": "./fonts/powerline/PowerlineSymbols.otf",
+  "unicode_range": ["E0A0", "E0B3"]
+}, {
+  "id": "pomicons",
+  "name": "Pomicons",
+  "description": "A set of icons for Pomodoro Technique. https://github.com/gabrielelana/pomicons",
+  "filename": "./fonts/pomicons/Pomicons.otf",
+  "unicode_range": ["E000", "E00A"]
+}, {
+  "id": "fa",
+  "name": "Font Awesome",
+  "description": "http://fontawesome.io/",
+  "filename": "./fonts/font-awesome/FontAwesome.otf",
+  "unicode_range": ["F000", "F2E0"],
+  "scale": 0.9
+}, {
+  "id": "fae",
+  "name": "Font Awesome Extension",
+  "description": "http://andrelgava.github.io/font-awesome-extension/",
+  "filename": "./fonts/font-awesome-extension/font-awesome-extension.ttf",
+  "unicode_range": ["E000", "E0A9"],
+  "remap_start_point": "E200",
+  "scale": 0.9
+}, {
+  "id": "linux",
+  "name": "Font Linux",
+  "description": "https://github.com/Lukas-W/font-linux",
+  "filename": "./fonts/font-linux/font-linux.ttf",
+  "unicode_range": ["F100", "F115"],
+  "remap_start_point": "F300",
+  "scale": 0.9
+}, {
+  "id": "octicons",
+  "name": "Github Octicons",
+  "description": "https://octicons.github.com",
+  "filename": "./fonts/octicons/octicons.ttf",
+  "unicode_range": ["F000", "F27C"],
+  "remap_start_point": "F400",
+  "scale": 0.9
+}]
