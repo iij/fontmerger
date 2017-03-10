@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import fontforge
 import json
 import os
-import psMat
 import re
 import types
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
+import fontforge
+import psMat
 
 VERSION = '0.1.0'
 FONT_CONFIG = 'fonts.json'
@@ -32,8 +33,9 @@ def get_context(fid):
 def get_glyph_size_info(glyph):
     xmin, ymin, xmax, ymax = glyph.boundingBox()
     return {
-        'width': glyph.width,
+        'width': max(glyph.width, xmax - xmin),
         'vwidth': glyph.vwidth,
+        'height': ymax - ymin,
         'xmin': xmin,
         'ymin': ymin,
         'xmax': xmax,
@@ -45,6 +47,7 @@ def _get_font_max_size_info(font, start, end):
     data = {
         'width': 0,
         'vwidth': 0,
+        'height': 0,
         'xmin': 0,
         'ymin': 0,
         'xmax': 0,
@@ -104,6 +107,43 @@ def display_font_details(font):
             print('{0:>32}: {1}'.format(name, value))
 
 
+def preview(font, ctx):
+    unicode_range = ctx.get('unicode_range', [])
+    ext_start = 0
+    ext_end = 0
+    if len(unicode_range) >= 1:
+        ext_start = int(unicode_range[0], 16)
+    if len(unicode_range) >= 2:
+        ext_end = int(unicode_range[1], 16)
+    start = ext_start
+    end = ext_end
+    remap_start_point = ctx.get('remap_start_point', None)
+    if remap_start_point is not None:
+        start = int(remap_start_point, 16)
+        end = start + (ext_end - ext_start)
+    if ext_start is 0:
+        font.selection.all()
+    else:
+        font.selection.select(('ranges', 'unicode'), start, end)
+    hints = get_size_hints(font)
+    length = 0
+    line = ''
+    print('{0:-^80}'.format(' ' + ctx['id'] + ' '))
+    for glyph in list(font.selection.byGlyphs):
+        line += unichr(glyph.encoding)
+        if glyph.width < hints['full']['width']:
+            # half width
+            line += ' '
+            pass
+        length += 1
+        if length is 40:
+            print(line.encode('utf-8'))
+            length = 0
+            line = ''
+    if length > 0:
+        print(line.encode('utf-8'))
+
+
 def merge(base_font, font, ctx):
     unicode_range = ctx.get('unicode_range', [])
     glyph_scale = ctx.get('scale', 1.0)
@@ -117,10 +157,7 @@ def merge(base_font, font, ctx):
     remap_start_point = ctx.get('remap_start_point', None)
     if remap_start_point is not None:
         base_start = int(remap_start_point, 16)
-
     hints = get_size_hints(base_font)
-    half_width = hints['half']['width']
-    full_width = hints['full']['width']
     base_font_height = get_height(base_font)
     font_height = get_height(font)
     # scale transform
@@ -140,15 +177,18 @@ def merge(base_font, font, ctx):
         _glyph = base_font[index]
         _glyph.transform(scale)
         _glyph.glyphname = glyph.glyphname
-        hint = abs(half_width - _glyph.width) < abs(full_width - _glyph.width) and hints['half'] or hints['full']
-        # TODO: translate x
         info = get_glyph_size_info(_glyph)
+        move_x = 0
         move_y = 0
         if hints['ascent'] < info['ymax']:
             move_y = hints['ascent'] - info['ymax']
-        if glyph_scale is not 1.0:
-            move_y -= (base_font_height * (1.0 - glyph_scale) / 2.0)
-        _glyph.transform(psMat.translate(0, move_y))
+        if glyph_scale < 1.0 and ctx.get('adjust_position', False):
+            # TODO: translate X
+            move_x += info['width'] * (1.0 - glyph_scale) / 2.0
+            move_y -= info['height'] * (1.0 - glyph_scale) / 2.0
+        _glyph.transform(psMat.translate(move_x, move_y))
+        info = get_glyph_size_info(_glyph)
+        hint = hints['half']['width'] * 1.05 >= info['width'] and hints['half'] or hints['full']
         _glyph.width = hint['width']
         _glyph.vwidth = hint['vwidth']
 
@@ -170,6 +210,8 @@ def main():
                         help='output directory')
     parser.add_argument('-l', '--list', dest='list_fonts', action='store_true', default=False,
                         help='show available additional fonts')
+    parser.add_argument('-p', '--preview', dest='preview_fonts', action='store_true', default=False,
+                        help='preview fonts')
     parser.add_argument('--all', dest='all', action='store_true', default=False,
                         help='extend all fonts')
     parser.add_argument('--suffix', dest='suffix',
@@ -213,17 +255,21 @@ def main():
         for fid in ids:
             ctx = get_context(fid)
             if ctx:
+                if args.preview_fonts:
+                    preview(base_font, ctx)
+                    continue
                 ext_font = fontforge.open(ctx['filename'])
                 merge(base_font, ext_font, ctx)
                 if ext_font.copyright and ext_font.copyright not in base_font.copyright:
                     base_font.copyright += '\n' + ext_font.copyright
                 ext_font.close()
 
-        extension = os.path.splitext(base_font.path)[1]
-        font_filename = os.path.join(args.outputdir, base_font.fontname + extension)
-        base_font.generate(font_filename, flags=('opentype',))
+        if not args.preview_fonts:
+            extension = os.path.splitext(base_font.path)[1]
+            font_filename = os.path.join(args.outputdir, base_font.fontname + extension)
+            base_font.generate(font_filename, flags=('opentype',))
+            print('"{0}" generated.'.format(font_filename))
         base_font.close()
-        print('"{0}" generated'.format(font_filename))
 
 
 if __name__ == '__main__':

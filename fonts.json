@@ -5,7 +5,8 @@
   "filename": "./fonts/seti-ui/seti-ui.otf",
   "unicode_range": ["E4FA", "E52B"],
   "remap_start_point": "E5FA",
-  "scale": 0.9
+  "scale": 0.8,
+  "adjust_position": true
 }, {
   "id": "devicon",
   "name": "Devicon",
@@ -13,7 +14,8 @@
   "filename": "./fonts/devicon/devicons.ttf",
   "unicode_range": ["E600", "E6C5"],
   "remap_start_point": "E700",
-  "scale": 0.9
+  "scale": 0.9,
+  "adjust_position": true
 }, {
   "id": "powerline-extra",
   "name": "Powerline Extra Symbols",
@@ -31,14 +33,15 @@
   "name": "Pomicons",
   "description": "A set of icons for Pomodoro Technique. https://github.com/gabrielelana/pomicons",
   "filename": "./fonts/pomicons/Pomicons.otf",
-  "unicode_range": ["E000", "E00A"]
+  "unicode_range": ["E000", "E00A"],
+  "adjust_position": true
 }, {
   "id": "fa",
   "name": "Font Awesome",
   "description": "http://fontawesome.io/",
   "filename": "./fonts/font-awesome/FontAwesome.otf",
   "unicode_range": ["F000", "F2E0"],
-  "scale": 0.9
+  "scale": 0.75
 }, {
   "id": "fae",
   "name": "Font Awesome Extension",
@@ -46,7 +49,8 @@
   "filename": "./fonts/font-awesome-extension/font-awesome-extension.ttf",
   "unicode_range": ["E000", "E0A9"],
   "remap_start_point": "E200",
-  "scale": 0.9
+  "scale": 0.75,
+  "adjust_position": true
 }, {
   "id": "linux",
   "name": "Font Linux",
@@ -54,7 +58,8 @@
   "filename": "./fonts/font-linux/font-linux.ttf",
   "unicode_range": ["F100", "F115"],
   "remap_start_point": "F300",
-  "scale": 0.9
+  "scale": 0.85,
+  "adjust_position": true
 }, {
   "id": "octicons",
   "name": "Github Octicons",
@@ -62,5 +67,6 @@
   "filename": "./fonts/octicons/octicons.ttf",
   "unicode_range": ["F000", "F27C"],
   "remap_start_point": "F400",
-  "scale": 0.9
+  "scale": 0.9,
+  "adjust_position": true
 }]

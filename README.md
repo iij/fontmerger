@@ -1,6 +1,9 @@
 # Font Merger
 You can merge some fonts which are regular fonts and symbol fonts([Powerline](https://powerline.readthedocs.io/en/latest/), [Font Awesome](http://fontawesome.io/)) and others.
-This script is inspired by [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts)
+
+![ターミナル](terminal.png "サンプル")
+
+This script has compability with [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts)
 
 ## Installation
 
@@ -44,7 +47,7 @@ $ fontforge -script mergefonts.py -x powerline fa -o ~/Library/Fonts/ --suffix=w
 
 $ fc-cache -fv ~/Library/Fonts
 ```
-
+You can use merged fonts, download from [Ricty Diminished with icons](./sample)
 
 - Available fonts
 ```

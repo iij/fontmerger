@@ -6,6 +6,7 @@
 ## 環境
 
 - macOS Sierra (Version 10.12.3)
+- Python 2.7.13
 - libfontforge 20170104
 
 ## 手順
