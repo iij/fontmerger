@@ -13,7 +13,7 @@
 
 ```
 $ curl http://www.rs.tus.ac.jp/yyusa/ricty_diminished/ricty_diminished-4.1.0.tar.gz | tar xvz
-$ fontforge -script mergefonts.py --all -o sample --suffix=with-icons -- RictyDiminished-Regular.ttf RictyDiminished-Bold.ttf RictyDiminishedDiscord-Regular.ttf RictyDiminishedDiscord-Bold.ttf
+$ bin/fontmerger --all -o sample --suffix=with-icons -- RictyDiminished-Regular.ttf RictyDiminished-Bold.ttf RictyDiminishedDiscord-Regular.ttf RictyDiminishedDiscord-Bold.ttf
 ```
 
 ## ライセンス

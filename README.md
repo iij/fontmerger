@@ -18,7 +18,7 @@ $ git clone https://github.com/iij/fontmerger.git
 
 ### Usage
 ```
-$ fontforge -script mergefonts.py -h
+$ bin/fontmerger -h
 
 usage: mergefonts.py [-h] [-V] [-v] [-x [EXT_FONT [EXT_FONT ...]]] [-i]
                      [-o OUTPUT_DIR] [-l] [--all] [--suffix SUFFIX]
@@ -43,7 +43,7 @@ optional arguments:
 
 - Example
 ```
-$ fontforge -script mergefonts.py -x powerline fa -o ~/Library/Fonts/ --suffix=with-icons -- Ricty.ttf Ricty-Bold.ttf
+$ bin/fontmerger -x powerline fa -o ~/Library/Fonts/ --suffix=with-icons -- Ricty.ttf Ricty-Bold.ttf
 
 $ fc-cache -fv ~/Library/Fonts
 ```
@@ -51,7 +51,7 @@ You can use merged fonts, download from [Ricty Diminished with icons](./sample)
 
 - Available fonts
 ```
-$ fontforge -script mergefonts.py -l
+$ bin/fontmerger -l
 
 ------------------------------- Available Fonts --------------------------------
          seti-ui: Seti UI

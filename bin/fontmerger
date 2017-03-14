@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if hash fontforge 2>/dev/null; then
+  fontforge -script fontmerger/__init__.py "$@" 2>/dev/null
+else
+  python ./fontmerger/__init__.py "$@"
+fi

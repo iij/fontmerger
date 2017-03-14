@@ -21,7 +21,7 @@
   "name": "Powerline Extra Symbols",
   "description": "Extra glyphs for the powerline separators. https://github.com/ryanoasis/powerline-extra-symbols",
   "filename": "./fonts/powerline-extra/PowerlineExtraSymbols.otf",
-  "unicode_range": ["E0A0", "E0D4"]
+  "unicode_range": ["E0B4", "E0D4"]
 }, {
   "id": "powerline",
   "name": "Powerline Symbols",
@@ -41,7 +41,8 @@
   "description": "http://fontawesome.io/",
   "filename": "./fonts/font-awesome/FontAwesome.otf",
   "unicode_range": ["F000", "F2E0"],
-  "scale": 0.75
+  "scale": 0.75,
+  "adjust_position": true
 }, {
   "id": "fae",
   "name": "Font Awesome Extension",
