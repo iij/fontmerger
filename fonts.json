@@ -14,7 +14,7 @@
   "filename": "./fonts/devicon/devicons.ttf",
   "unicode_range": ["E600", "E6C5"],
   "remap_start_point": "E700",
-  "scale": 0.9,
+  "scale": 0.95,
   "adjust_position": true
 }, {
   "id": "powerline-extra",

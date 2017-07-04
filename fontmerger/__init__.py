@@ -2,11 +2,12 @@
 import json
 import sys
 import types
+import logging
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-from fontmerger import MergingContextHolder, MergingContext, FontMerger
+from fontmerger import MergingContext, FontMerger, display_unicode_utf8
 
-VERSION = '0.1.0'
+VERSION = '0.2.1'
 
 
 def show_version():
@@ -19,19 +20,22 @@ def show_font_details(font):
         if name.startswith('_'):
             continue
         value = getattr(font, name)
-        if type(value) in (types.IntType, types.FloatType, types.StringType, types.UnicodeType):
+        if name == 'sfnt_names':
+            for locale, _name, _value in value:
+                print('{0:>32}: {1} = {2}'.format(locale, _name, _value))
+        if type(value) in (types.IntType, types.FloatType,) + types.StringTypes:
             print('{0:>32}: {1}'.format(name, value))
 
 
-def show_available_fonts(context_holder):
+def show_available_fonts(contexts=()):
     print('{0:-^80}'.format(' Available Fonts '))
-    for ctx in context_holder.contexts:
+    for ctx in contexts:
         print('{0:>16}: {1}'.format(ctx.id, ctx.name))
         if ctx.description:
             print('{0:>20} {1}'.format('-', ctx.description))
 
 
-def get_argparser():
+def opt_parser():
     parser = ArgumentParser(prog='fontmerger', formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('base_fonts', metavar='BASE_FONT', nargs='*', default=[],
                         help='target fonts')
@@ -53,42 +57,51 @@ def get_argparser():
                         help='preview fonts')
     parser.add_argument('--all', dest='all', action='store_true', default=False,
                         help='extend all fonts')
-    parser.add_argument('--suffix', dest='suffix',
-                        help='font name suffix')
+    parser.add_argument('--suffix', dest='suffix', help='font name suffix')
+    parser.add_argument('--debug', dest='debug', action='store_true', default=False, help='debug mode')
     return parser
 
 
 def main():
-    parser = get_argparser()
+    parser = opt_parser()
     args = parser.parse_args()
-    holder = MergingContextHolder()
+    contexts = []
     with open(args.config) as fo:
         xs = json.load(fo)
         for x in xs:
             ctx = MergingContext(**x)
-            ctx.enabled = args.all or ctx.id in args.ext_fonts
-            holder.add(ctx)
+            if args.list_fonts or args.all or ctx.id in args.ext_fonts:
+                contexts.append(ctx)
     if args.list_fonts:
-        show_available_fonts(holder)
+        show_available_fonts(contexts)
         return 0
+    if args.verbose:
+        logging.basicConfig(format='%(message)s', stream=sys.stdout)
     if args.show_version:
         show_version()
         return 0
-    if len(args.base_fonts) is 0 and len(args.ext_fonts) is 0:
+    if len(args.base_fonts) is 0 and len(contexts) is 0:
         parser.print_help()
         return 1
+    if args.preview_fonts:
+        for ctx in contexts:
+            display_unicode_utf8(ctx, sys.stdout)
+        return 0
+    log = logging.getLogger()
     for path in args.base_fonts:
-        merger = FontMerger(path, holder)
-        if args.info:
-            show_font_details(merger.base_font)
-            continue
-        if args.preview_fonts:
-            merger.preview()
-            continue
-        merger.merge()
-        merger.rename(args.suffix)
-        merger.generate(args.outputdir)
-        merger.close()
+        log.info('"%s" merging fonts...', path)
+        try:
+            merger = FontMerger(path)
+            if args.info:
+                show_font_details(merger.base_font)
+                continue
+            merger.merge(contexts)
+            merger.rename(args.suffix)
+            filename = merger.generate(args.outputdir)
+            merger.close()
+            log.info('"%s" generated.', filename)
+        except Exception, e:
+            log.error(e)
     return 0
 
 

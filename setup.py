@@ -9,7 +9,7 @@ from fontmerger import VERSION
 setup(name='fontmerger',
       version=VERSION,
       description='merging font tools',
-      author='yosinobu',
+      author='Internet Initiative Japan Inc',
       license='MIT',
       author_email='yosinobu@iij.ad.jp',
       url='https://github.com/iij/fontmerger',

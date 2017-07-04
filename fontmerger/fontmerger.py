@@ -5,57 +5,155 @@ import fontforge
 import os
 import psMat
 import re
+import sys
+from logging import getLogger
+
+
+class MergingContext(object):
+    def __init__(self, **kwargs):
+        self.id = ''
+        self.filename = ''
+        self.name = ''
+        self.description = ''
+        self.unicode_range = []
+        self.remap_start_point = None
+        self.scale = 1.0
+        self.adjust_position = False
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+class GlyphSizeInfo(object):
+    def __init__(self, glyph):
+        """:param fontforge.glyph glyph: Glyph object"""
+        xmin, ymin, xmax, ymax = glyph.boundingBox()
+        self.glyph_width = glyph.width
+        self.glyph_vwidth = glyph.vwidth
+        self.width = xmax - xmin
+        self.height = ymax - ymin
+        self.xmin = xmin
+        self.ymin = ymin
+        self.xmax = xmax
+        self.ymax = ymax
+
+
+class FontSizeHints(object):
+    def __init__(self, font):
+        """Font's size hints
+        :param fontforge.font font: a font object"""
+        self.font = font
+        self._half = None
+        self._full = None
+        self.ascent = font.hhea_ascent
+        self.descent = font.hhea_descent
+
+    @property
+    def half(self):
+        """returns size info for half-width font
+        :return GlyphSizeInfo: glyph's size info"""
+        if not self._half:
+            self._half = _get_font_max_size_info(self.font, 0x23, 0x7e)
+        return self._half
+
+    @property
+    def full(self):
+        """returns size info for full-width font
+        :return: GlyphSizeInfo: glyph's size info
+        """
+        if not self._full:
+            self._full = _get_font_max_size_info(self.font, 0xff01, 0xff5e)
+        return self._full
+
+
+def display_unicode_utf8(ctx, fd=sys.stdout):
+    """display unicode characters as UTF-8
+    :param MergingContext ctx: a merging font context
+    :param file fd: display target"""
+    font = fontforge.open(ctx.filename)
+    unicode_range = ctx.unicode_range
+    start = 0
+    end = 0
+    if len(unicode_range) >= 1:
+        start = int(unicode_range[0], 16)
+    if len(unicode_range) >= 2:
+        end = int(unicode_range[1], 16)
+    remap_start_point = ctx.remap_start_point
+    delta = 0
+    if remap_start_point is not None:
+        delta = int(remap_start_point, 16) - start
+    if start is 0:
+        font.selection.all()
+    else:
+        font.selection.select(('ranges', 'unicode'), start, end)
+    length = 0
+    line = ''
+    fd.write('{0:-^80}\n'.format(' ' + ctx.id + ' '))
+    for glyph in list(font.selection.byGlyphs):
+        line += unichr(glyph.encoding + delta)
+        info = get_glyph_size_info(glyph)
+        if info.width <= font.em / 2:
+            # half width
+            line += ' '
+        length += 1
+        if length is 40:
+            fd.write(line.encode('utf-8') + '\n')
+            length = 0
+            line = ''
+    if length > 0:
+        fd.write(line.encode('utf-8') + '\n')
+    fd.flush()
+    font.close()
 
 
 def get_glyph_size_info(glyph):
-    xmin, ymin, xmax, ymax = glyph.boundingBox()
-    return {
-        'width': max(glyph.width, xmax - xmin),
-        'vwidth': glyph.vwidth,
-        'height': ymax - ymin,
-        'xmin': xmin,
-        'ymin': ymin,
-        'xmax': xmax,
-        'ymax': ymax,
-    }
+    """return a glyph size information(position, height, width)
+    :param fontforge.glyph glyph: glyph object
+    :return GlyphSizeInfo glyph: glyph's size information"""
+    return GlyphSizeInfo(glyph)
 
 
 def _get_font_max_size_info(font, start, end):
-    data = {
-        'width': 0,
-        'vwidth': 0,
-        'height': 0,
-        'xmin': 0,
-        'ymin': 0,
-        'xmax': 0,
-        'ymax': 0,
-    }
+    """return size information for biggest glyph
+    :param fontforge.font font: font object
+    :param int start: unicode start point
+    :param int end: unicode end point
+    :return GlyphSizeInfo: biggest glyph size info"""
+    info = None
     for code in range(start, end + 1):
         try:
-            _data = get_glyph_size_info(font[code])
-            for k, v in _data.items():
-                if abs(v) > abs(data[k]):
-                    data[k] = v
+            _info = get_glyph_size_info(font[code])
+            if info is None:
+                info = _info
+                continue
+            for key in dir(_info):
+                a = getattr(_info, key)
+                b = getattr(info, key)
+                if abs(a) > abs(b):
+                    setattr(info, key, a)
         except TypeError:
             continue
-    return data
+    return info
 
 
 def get_size_hints(font):
-    # return hints for glyph transform
-    return {
-        'half': _get_font_max_size_info(font, 0x23, 0x7e),
-        'full': _get_font_max_size_info(font, 0xff01, 0xff5e),
-        'ascent': font.hhea_ascent,
-        'descent': font.hhea_descent,
-    }
+    """return font's size hints
+    :param fontforge.font font: a font object
+    :return hints for glyph transform"""
+    return FontSizeHints(font)
 
 
 def get_height(font):
+    """return font height
+    :param fontforge.font font: a font object
+    :return font height"""
     return font.hhea_ascent + abs(font.hhea_descent)
 
 
 def get_font_name_info(font):
+    """return font name information
+    :param fontforge.font font: a font object
+    :return tuple of (font name, font family name, full name, sub-family name)"""
     family = font.familyname
     fullname = font.fullname
     sub_family = 'Regular'
@@ -74,49 +172,16 @@ def get_font_name_info(font):
     return name, family, fullname, sub_family
 
 
-class MergingContext(object):
-    def __init__(self, **kwargs):
-        self.id = None
-        self.name = ''
-        self.description = ''
-        self.unicode_range = []
-        self.remap_start_point = None
-        self.scale = 1.0
-        self.adjust_position = False
-        self.enabled = False
-
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-
-class MergingContextHolder(object):
-    def __init__(self, contexts=None):
-        self.contexts = contexts or []
-
-    def add(self, ctx):
-        self.contexts.append(ctx)
-
-    @property
-    def ids(self):
-        return [ctx.id for ctx in self.contexts]
-
-    @property
-    def enable_contexts(self):
-        return [ctx for ctx in self.contexts if ctx.enabled]
-
-    def get_by_id(self, fid):
-        for ctx in self.contexts:
-            if ctx.id == fid:
-                return ctx
-
-
 class FontMerger(object):
-    def __init__(self, font_filename, context_holder, verbose=False):
-        self.base_font = fontforge.open(font_filename)
-        self.context_holder = context_holder
-        self.verbose = verbose
+    def __init__(self, path):
+        self.log = getLogger()
+        try:
+            path = path.decode('utf-8')
+        except UnicodeDecodeError, e:
+            self.log.warn(e.message)
+        self.base_font = fontforge.open(path)
+        self.base_font.encoding = 'UnicodeFull'
         self._hints = None
-        self._prepared = False
 
     def rename(self, suffix=None):
         fontname, familyname, fullname, subfamily = get_font_name_info(self.base_font)
@@ -131,53 +196,19 @@ class FontMerger(object):
         self.base_font.appendSFNTName('English (US)', 'Compatible Full', fullname)
         self.base_font.appendSFNTName('English (US)', 'SubFamily', subfamily)
 
-    def prepare(self):
-        if not self._prepared:
-            self.base_font.encoding = 'UnicodeFull'
+    @property
+    def hints(self):
+        if not self._hints:
             self._hints = get_size_hints(self.base_font)
-            self._prepared = True
+        return self._hints
 
-    def preview_one(self, ctx):
-        self.prepare()
-        unicode_range = ctx.unicode_range
-        ext_start = 0
-        ext_end = 0
-        if len(unicode_range) >= 1:
-            ext_start = int(unicode_range[0], 16)
-        if len(unicode_range) >= 2:
-            ext_end = int(unicode_range[1], 16)
-        start = ext_start
-        end = ext_end
-        remap_start_point = ctx.remap_start_point
-        if remap_start_point is not None:
-            start = int(remap_start_point, 16)
-            end = start + (ext_end - ext_start)
-        if ext_start is 0:
-            self.base_font.selection.all()
-        else:
-            self.base_font.selection.select(('ranges', 'unicode'), start, end)
-        length = 0
-        line = ''
-        print('{0:-^80}'.format(' ' + ctx.id + ' '))
-        for glyph in list(self.base_font.selection.byGlyphs):
-            line += unichr(glyph.encoding)
-            if glyph.width < self._hints['full']['width']:
-                # half width
-                line += ' '
-            length += 1
-            if length is 40:
-                print(line.encode('utf-8'))
-                length = 0
-                line = ''
-        if length > 0:
-            print(line.encode('utf-8'))
-
-    def preview(self):
-        for ctx in self.context_holder.enable_contexts:
-            self.preview_one(ctx)
+    def get_hint(self, width):
+        if self.hints.half.width * 1.2 >= width:
+            return self.hints.half
+        return self.hints.full
 
     def merge_one(self, ctx):
-        self.prepare()
+        self.log.debug('"%s" merging...', ctx.filename)
         font = fontforge.open(ctx.filename)
         unicode_range = ctx.unicode_range
         glyph_scale = ctx.scale
@@ -195,14 +226,15 @@ class FontMerger(object):
         font_height = get_height(font)
 
         # scale transform
-        scale_ratio_x = float(self.base_font.em) / font.em
-        scale_ratio_y = float(base_font_height) / font_height
+        scale_ratio_x = round(float(self.base_font.em) / font.em, 3)
+        scale_ratio_y = round(float(base_font_height) / font_height, 3)
         scale = psMat.scale(scale_ratio_x * glyph_scale, scale_ratio_y * glyph_scale)
         if ext_start is 0:
             font.selection.all()
         else:
             font.selection.select(('ranges', 'unicode'), ext_start, ext_end)
 
+        # copy and transform glyphs
         for glyph in list(font.selection.byGlyphs):
             index = base_start + (glyph.encoding - ext_start)
             font.selection.select(glyph.encoding)
@@ -215,32 +247,40 @@ class FontMerger(object):
             info = get_glyph_size_info(_glyph)
             move_x = 0
             move_y = 0
-            if self._hints['ascent'] < info['ymax']:
-                move_y = self._hints['ascent'] - info['ymax']
+            if self.hints.ascent < info.ymax:
+                move_y = self.hints.ascent - info.ymax
             if glyph_scale < 1.0 and ctx.adjust_position:
-                move_x += info['width'] * (1.0 - glyph_scale) / 2.0
-                move_y -= info['height'] * (1.0 - glyph_scale) / 2.0
+                move_x += info.width * (1.0 - glyph_scale) / 2.0
+                move_y -= info.height * (1.0 - glyph_scale) / 2.0
             info = get_glyph_size_info(_glyph)
-            if info['width'] + move_x < self.base_font.em:
+            if info.width + move_x < self.base_font.em:
                 _glyph.left_side_bearing += move_x
-            hint = self._hints['half']['width'] * 1.05 >= info['width'] and self._hints['half'] or self._hints['full']
+            hint = self.get_hint(info.width)
+            if hint.glyph_width < info.width and ctx.adjust_position:
+                delta = info.width - hint.glyph_width
+                move_x += 1.0 - (delta / hint.glyph_width)
             _glyph.transform(psMat.translate(move_x, move_y))
-            _glyph.width = hint['width']
-            _glyph.vwidth = hint['vwidth']
+            _glyph.width = hint.glyph_width
+            _glyph.vwidth = hint.glyph_vwidth
 
+        # add copyright
         if font.copyright and font.copyright not in self.base_font.copyright:
             self.base_font.copyright += '\n' + font.copyright
         font.close()
+        self.log.debug('"%s" merged.', ctx.filename)
 
-    def merge(self):
-        for ctx in self.context_holder.enable_contexts:
-            self.merge_one(ctx)
+    def merge(self, contexts=()):
+        for ctx in contexts:
+            try:
+                self.merge_one(ctx)
+            except Exception, e:
+                self.log.error(e.message)
 
     def generate(self, output_dir):
-        extension = os.path.splitext(self.base_font.path)[1]
-        font_filename = os.path.join(output_dir, self.base_font.fontname + extension)
-        self.base_font.generate(font_filename, flags=('opentype',))
-        print('"{0}" generated.'.format(font_filename))
+        ext = os.path.splitext(self.base_font.path)[1]
+        filename = os.path.join(output_dir, self.base_font.fontname + ext)
+        self.base_font.generate(filename, flags=('opentype',))
+        return filename
 
     def close(self):
         self.base_font.close()

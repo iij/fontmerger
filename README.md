@@ -3,7 +3,7 @@ You can merge some fonts which are regular fonts and symbol fonts([Powerline](ht
 
 ![ターミナル](terminal.png "サンプル")
 
-This script has compability with [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts)
+This script has compatibility with [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts)
 
 ## Installation
 
