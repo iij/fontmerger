@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import sys
+import traceback
 import types
 import logging
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -101,7 +102,10 @@ def main():
             merger.close()
             log.info('"%s" generated.', filename)
         except Exception, e:
-            log.error(e)
+            if args.debug:
+                traceback.print_exc(file=sys.stdout)
+            else:
+                log.error(e)
     return 0
 
 

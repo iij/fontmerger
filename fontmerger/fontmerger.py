@@ -175,12 +175,12 @@ def get_font_name_info(font):
 class FontMerger(object):
     def __init__(self, path):
         self.log = getLogger()
-        try:
-            path = path.decode('utf-8')
-        except UnicodeDecodeError, e:
-            self.log.warn(e.message)
-        self.base_font = fontforge.open(path)
-        self.base_font.encoding = 'UnicodeFull'
+        self.base_font_path = path
+        font = fontforge.open(path)
+        if font.iscid:
+            raise RuntimeError('CID font is not supported yet.')
+        font.encoding = 'UnicodeFull'
+        self.base_font = font
         self._hints = None
 
     def rename(self, suffix=None):
@@ -271,10 +271,7 @@ class FontMerger(object):
 
     def merge(self, contexts=()):
         for ctx in contexts:
-            try:
-                self.merge_one(ctx)
-            except Exception, e:
-                self.log.error(e.message)
+            self.merge_one(ctx)
 
     def generate(self, output_dir):
         ext = os.path.splitext(self.base_font.path)[1]
