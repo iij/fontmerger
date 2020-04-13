@@ -8,7 +8,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 from fontmerger import MergingContext, FontMerger, display_unicode_utf8
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 
 def show_version():
@@ -101,7 +101,7 @@ def main():
             filename = merger.generate(args.outputdir)
             merger.close()
             log.info('"%s" generated.', filename)
-        except Exception, e:
+        except Exception as e:
             if args.debug:
                 traceback.print_exc(file=sys.stdout)
             else:
