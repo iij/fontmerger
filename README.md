@@ -1,3 +1,5 @@
+# DEPRECATED: This repository is no longer supported.
+
 # Font Merger
 You can merge some fonts which are regular fonts and symbol fonts([Powerline](https://powerline.readthedocs.io/en/latest/), [Font Awesome](http://fontawesome.io/)) and others.
 
