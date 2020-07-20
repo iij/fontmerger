@@ -12,28 +12,28 @@ VERSION = '0.2.2'
 
 
 def show_version():
-    print('fontmerger v{0}'.format(VERSION))
+    print(('fontmerger v{0}'.format(VERSION)))
 
 
 def show_font_details(font):
-    print('{0:-^80}:'.format(' Font Details: '))
+    print(('{0:-^80}:'.format(' Font Details: ')))
     for name in dir(font):
         if name.startswith('_'):
             continue
         value = getattr(font, name)
         if name == 'sfnt_names':
             for locale, _name, _value in value:
-                print('{0:>32}: {1} = {2}'.format(locale, _name, _value))
-        if type(value) in (types.IntType, types.FloatType,) + types.StringTypes:
-            print('{0:>32}: {1}'.format(name, value))
+                print(('{0:>32}: {1} = {2}'.format(locale, _name, _value)))
+        if type(value) in (int, float,) + (str,):
+            print(('{0:>32}: {1}'.format(name, value)))
 
 
 def show_available_fonts(contexts=()):
-    print('{0:-^80}'.format(' Available Fonts '))
+    print(('{0:-^80}'.format(' Available Fonts ')))
     for ctx in contexts:
-        print('{0:>16}: {1}'.format(ctx.id, ctx.name))
+        print(('{0:>16}: {1}'.format(ctx.id, ctx.name)))
         if ctx.description:
-            print('{0:>20} {1}'.format('-', ctx.description))
+            print(('{0:>20} {1}'.format('-', ctx.description)))
 
 
 def opt_parser():
@@ -81,7 +81,7 @@ def main():
     if args.show_version:
         show_version()
         return 0
-    if len(args.base_fonts) is 0 and len(contexts) is 0:
+    if len(args.base_fonts) == 0 and len(contexts) == 0:
         parser.print_help()
         return 1
     if args.preview_fonts:

@@ -20,7 +20,7 @@ class MergingContext(object):
         self.scale = 1.0
         self.adjust_position = False
 
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             setattr(self, key, value)
 
 
@@ -82,7 +82,7 @@ def display_unicode_utf8(ctx, fd=sys.stdout):
     delta = 0
     if remap_start_point is not None:
         delta = int(remap_start_point, 16) - start
-    if start is 0:
+    if start == 0:
         font.selection.all()
     else:
         font.selection.select(('ranges', 'unicode'), start, end)
@@ -90,13 +90,13 @@ def display_unicode_utf8(ctx, fd=sys.stdout):
     line = ''
     fd.write('{0:-^80}\n'.format(' ' + ctx.id + ' '))
     for glyph in list(font.selection.byGlyphs):
-        line += unichr(glyph.encoding + delta)
+        line += chr(glyph.encoding + delta)
         info = get_glyph_size_info(glyph)
         if info.width <= font.em / 2:
             # half width
             line += ' '
         length += 1
-        if length is 40:
+        if length == 40:
             fd.write(line.encode('utf-8') + '\n')
             length = 0
             line = ''
@@ -229,7 +229,7 @@ class FontMerger(object):
         scale_ratio_x = round(float(self.base_font.em) / font.em, 3)
         scale_ratio_y = round(float(base_font_height) / font_height, 3)
         scale = psMat.scale(scale_ratio_x * glyph_scale, scale_ratio_y * glyph_scale)
-        if ext_start is 0:
+        if ext_start == 0:
             font.selection.all()
         else:
             font.selection.select(('ranges', 'unicode'), ext_start, ext_end)
